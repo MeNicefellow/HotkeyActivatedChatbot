@@ -28,14 +28,13 @@ def generate_reply(input_text):
 
 # Function to create the chat window
 def create_chat_window():
-    chat_window = tk.Tk()
+    chat_window = tk.Toplevel()
     chat_window.title("Chat Bot")
 
     # Setting up the chat log (display area)
     global chat_log
     chat_log = scrolledtext.ScrolledText(chat_window, state=tk.DISABLED, wrap=tk.WORD, height=20)
     chat_log.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
-
     # Setting up the entry field (input area)
     global entry
     entry = tk.Entry(chat_window)
@@ -44,7 +43,6 @@ def create_chat_window():
 
     chat_window.geometry("400x450")
     entry.focus()
-    chat_window.mainloop()
 
 # Function to start the chat window in a new thread
 def start_chat_window():
@@ -52,7 +50,11 @@ def start_chat_window():
     chat_thread.start()
 
 # Setting up the key combination
+root = tk.Tk()
+root.withdraw()
+
+# Setting up the key combination
 keyboard.add_hotkey('alt+d', start_chat_window)
 
 # Keep the program running
-keyboard.wait('esc')  # The program will keep running until you press 'esc'
+root.mainloop()
