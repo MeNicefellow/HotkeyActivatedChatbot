@@ -6,6 +6,7 @@ from utils import llm_chatter
 import pystray
 from PIL import Image
 import os
+
 # Hide the console
 if os.name == 'nt':
     import ctypes
@@ -13,6 +14,7 @@ if os.name == 'nt':
 else:
     sys.stdout = open(os.devnull, 'w')
     sys.stderr = open(os.devnull, 'w')
+
 llm_chatter = llm_chatter()
 
 # Function to handle user input and generate a reply
@@ -23,15 +25,38 @@ def on_enter_pressed(event=None):
         chat_log.insert(tk.END, f"You: {user_input}\n")
         entry.delete(0, tk.END)
 
-        # Generate the reply
-        reply = generate_reply(user_input)
-        chat_log.insert(tk.END, f"Bot: {reply}\n")
+        # Show "Bot: ..." immediately
+        chat_log.insert(tk.END, "Bot: ...\n")
         chat_log.yview(tk.END)
         chat_log.config(state=tk.DISABLED)
 
+        # Disable the entry field
+        entry.config(state=tk.DISABLED)
+
+        # Start a new thread to generate the reply
+        threading.Thread(target=generate_reply, args=(user_input,)).start()
+
 # Function to generate a reply
 def generate_reply(input_text):
-    return llm_chatter.communicate(input_text)
+    reply = llm_chatter.communicate(input_text)
+
+    # Update the chat log and re-enable user input on the main thread
+    root.after(0, update_chat_log, reply)
+
+# Function to update the chat log and re-enable user input
+def update_chat_log(reply):
+    chat_log.config(state=tk.NORMAL)
+
+    # Replace the "Bot: ..." with the actual reply
+    chat_log.delete("end-2l", "end-1l")  # Deletes the last line "Bot: ..."
+    chat_log.insert(tk.END, f"Bot: {reply}\n")
+
+    chat_log.yview(tk.END)
+    chat_log.config(state=tk.DISABLED)
+
+    # Re-enable the entry field
+    entry.config(state=tk.NORMAL)
+    entry.focus()
 
 # Function to create the chat window
 def create_chat_window():
@@ -62,7 +87,6 @@ def create_chat_window():
     chat_window.focus_force()
     entry.focus()
 
-
 def exit_application(icon, item):
     try:
         exit()
@@ -70,7 +94,6 @@ def exit_application(icon, item):
     except SystemExit:
         icon.stop()
         root.after(0, root.quit)
-
 
 # Function to start the chat window
 def start_chat_window():
